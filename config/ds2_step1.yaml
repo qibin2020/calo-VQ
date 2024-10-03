@@ -1,0 +1,131 @@
+data:
+  params:
+    num_workers: 0
+    pin_memory: true
+    train:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+        do_rotations: true
+        do_inversions: true
+    validation:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+    batch_size: 256
+  target: calo_ldm.data.DataModuleFromConfig
+model:
+  target: calo_ldm.models.VQModel
+  params:
+    legacy: True
+    dataset_name: '2'
+    do_metric: true
+    do_more_metric: true
+    do_R_metric: null
+    metric_evts: 100000
+    record_freq: 20
+    embed_dim: 256
+    n_embed: 1024
+    cond_dim: 1
+    z_pad:
+    - 4
+    - 8
+    z_padding_strategy: preprocess
+    log_scale_params:
+    - 0
+    - 3000
+    - 7
+    reco_normalization: R
+    disc_normalization: U
+    learn_R: false
+    encoder_config:
+      target: calo_ldm.models.Encoder
+      params:
+        ch_in: 9
+        ch_out: 128
+        conv_spec:
+        - 'cconv : k33 :     : p :    : c16'
+        - 'cconv : k53 : s31 : p : *2 :'
+        - 'fftd : 8'
+        - 'cconv : k33 :     : p : *2 :'
+        - 'cconv : k33 :     : p : *2 :'
+        - 'fftd : 4'
+        - 'cconv : k33 :     :   : *2 :'
+        cond_dim: 1
+        log_scale_params:
+        - 0
+        - 3000
+        - 7
+        z_pad:
+        - 4
+        - 8
+        z_padding_strategy: preprocess
+    decoder_config:
+      target: calo_ldm.models.Decoder
+      params:
+        ch_in: 128
+        ch_out: 9
+        conv_spec:
+        - 'cconvT : k33 :     :   :    : c256'
+        - 'ffti   : 4'
+        - 'cconvT : k33 :     : p : /2 :'
+        - 'cconvT : k33 :     : p : /2 :'
+        - 'ffti : 8'
+        - 'cconvT : k53 : s31 : p : /2 :'
+        - 'cconvT : k33 :     : p : /2 :'
+        output_activation: voxel_softmax
+        cond_dim: 1
+        learn_R: false
+        z_pad:
+        - 4
+        - 8
+        z_padding_strategy: preprocess
+    loss_config:
+      target: calo_ldm.losses.CombinedLoss
+      params:
+        pixel_power: 2
+        pixel_weight: 1
+        ec_weight: 0.0001
+        width_weight: 0.0001
+        disc_conditional: false
+        disc_in_channels: 9
+        disc_start: 500
+        disc_weight: 0.8
+        codebook_weight: 1.0
+        perceptual_weight: 0
+        R1_weight: 1
+        R2_weight: 0
+        disc_config:
+          target: calo_ldm.models.Discriminator
+          params:
+            pooling: null
+            ch_in: 9
+            conv_spec:
+            - 'cconv : k33 :     : p :    : c16'
+            - 'cconv : k33 :     : p : *2 :'
+            - 'cconv : k53 : s32 :   : *2 :'
+            - 'cconv : k33 :     :   :    :'
+            - 'cconv : k33 :     :   : *2 :'
+            - 'cconv : k33 : s12 :   : *2 :'
+            - 'cconv : k33 : s22 :   : *2 :'
+            cond_dim: 1
+            log_scale_params:
+            - 0
+            - 3000
+            - 7
+        perceptual_config: null
+        cond_dim: 1
+        n_embed: 1024
+        log_scale_params:
+        - 0
+        - 3000
+        - 7
+        learn_R: false
+        disc_normalization: U
+        reco_normalization: R
+        unpad_z:
+        - 4
+        - 8
+        dataset_name: '2'
+  base_learning_rate: 2.0e-06
+  monitor: val/rec_loss

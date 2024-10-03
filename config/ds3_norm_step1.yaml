@@ -1,0 +1,183 @@
+data:
+  params:
+    num_workers: 0
+    pin_memory: true
+    train:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: /hpcfs/cepc/higgs/liuqibin/CALO/calo-data/ds3/dataset_3_12.hdf5
+        do_rotations: true
+        do_inversions: true
+    validation:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        load_partial: 10000
+        file_path: /hpcfs/cepc/higgs/liuqibin/CALO/calo-data/ds3/dataset_3_34.hdf5
+    batch_size: 256
+  target: calo_ldm.data.DataModuleFromConfig
+model:
+  base_learning_rate: 2.0e-06
+  monitor: val/rec_loss
+  target: calo_ldm.models.VQModel
+  params:
+    dataset_name: '3'
+    do_metric: true
+    do_more_metric: true
+    do_R_metric: null
+    metric_evts: 10000
+    record_freq: 20
+    embed_dim: 256
+    n_embed: 1024
+    cond_dim: 1
+    z_pad:
+    - 4
+    - 8
+    z_padding_strategy: internal
+    log_scale_params:
+    - 0
+    - 40000
+    - 10
+    reco_normalization: R
+    disc_normalization: U
+    encoder_config:
+      target: calo_ldm.models.Encoder
+      params:
+        ch_in: 18
+        ch_out: 256
+        conv_spec:
+        - 'cconv : k33 :     : c32'
+        - 'cconv : k33 :     : c32'
+        - 'fftd  : 12 : 2'
+        - 'cconv : k33 : s21  : c64'
+        - 'cconv : k33 :  p   : c64'
+        - 'fftd  : 8 : 2'
+        - 'cconv : k33 :  p  : c128'
+        - 'cconv : k33 :  p  : c128'
+        - 'fftd  : 4 : 2'
+        - 'cconv : k33 :     : c256'
+        cond_dim: 1
+        log_scale_params:
+        - 0
+        - 40000
+        - 10
+        z_pad:
+        - 4
+        - 8
+        z_padding_strategy: internal
+    decoder_config:
+      target: calo_ldm.models.DecoderMH
+      params:
+        ch_in: 256
+        ch_out: 18
+        conv_spec:
+        - 'cconvT : k33 :     : c128'
+        - 'ffti  : 4 : 2'
+        - 'cconvT : k33 :  p  : c128'
+        - 'cconvT : k33 :  p  : c64'
+        - 'ffti  : 8 : 2'
+        - 'cconvT : k33 :  p  : c64'
+        - 'cconvT : k33 : s21 : c32'
+        - 'ffti  : 12 : 2'
+        - 'cconvT : k33 :     : c32'
+        - 'cconvT : k33 :     : c32'
+        output_activation: voxel_relu_expm1_max
+        cond_dim: 1
+        z_pad:
+        - 4
+        - 8
+        z_padding_strategy: internal
+        learn_R: false
+        layer_seg:
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        - 1
+        layer_seg_dim: -2
+    loss_config:
+      target: calo_ldm.losses.CombinedLoss
+      params:
+        pixel_power: 2
+        pixel_weight: 1
+        ec_weight: 0.0001
+        width_weight: 0.0001
+        disc_conditional: false
+        disc_in_channels: 9
+        disc_start: 500
+        disc_weight: 0.8
+        codebook_weight: 1.0
+        perceptual_weight: 0
+        R1_weight: 1
+        R2_weight: 0
+        disc_config:
+          target: calo_ldm.models.Discriminator
+          params:
+            pooling: null
+            cond_dim: 1
+            ch_in: 18
+            conv_spec:
+            - 'cconv : k33 :     : c32'
+            - 'cconv : k33 : s21 : c64'
+            - 'fftd : 18'
+            - 'cconv : k33 :     : c64'
+            - 'cconv : k33 : s21 : c128'
+            - 'fftd : 16'
+            - 'cconv : k33 :     : c128'
+            - 'fftd : 8'
+            - 'cconv : k33 :     : c256'
+            log_scale_params:
+            - 0
+            - 40000
+            - 10
+        perceptual_config: null
+        cond_dim: 1
+        n_embed: 1024
+        log_scale_params:
+        - 0
+        - 40000
+        - 10
+        disc_normalization: U
+        reco_normalization: R
+        unpad_z: null
+        dataset_name: '3'
+        learn_R: false

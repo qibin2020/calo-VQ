@@ -1,0 +1,39 @@
+data:
+  params:
+    num_workers: 0
+    pin_memory: true
+    train:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+        do_ds1_augmentations: false
+    validation:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+    batch_size: 256
+  target: calo_ldm.data.DataModuleFromConfig
+model:
+  params:
+    sequence_shape:
+    - 32
+    monitor: val/loss
+    codebook_size: 1024
+    n_layer: 2
+    n_head: 2
+    n_embd: 64
+    predict_R: true
+    debug_mode: 2
+    R_seq_len: 2
+    R_max: 3
+    R_renorm: false
+    cond_bins: 15
+    cond_dim: 3
+    vq_config:
+      logdir: models/ds1photon
+      model_config: config/ds1photon_step1.yaml
+      checkpoint: models/ds1photon/checkpoints/epoch.ckpt
+    pure_mode: false
+    record_freq: 20
+  base_learning_rate: 3.0e-06
+  target: calo_ldm.models.CondGPT

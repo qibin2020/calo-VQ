@@ -1,0 +1,22 @@
+name: calo-ldm
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python==3.8.5
+  - pytorch
+  - torchvision
+  - pytorch-cuda=11.8
+  - numpy
+  - matplotlib
+  - h5py
+  - pip
+  - pip:
+    - psutil
+    - pytorch-lightning==1.6.5
+    - torchmetrics==0.6.0
+    - omegaconf==2.1.1
+    - test-tube>=0.7.5
+    - einops==0.3.0
+    - -e .

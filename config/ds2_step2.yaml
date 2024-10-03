@@ -1,0 +1,36 @@
+data:
+  target: calo_ldm.data.DataModuleFromConfig
+  params:
+    num_workers: 0
+    pin_memory: true
+    train:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        do_rotations: true
+        file_path: "xxx.hdf5"
+    validation:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+    batch_size: 256
+model:
+  base_learning_rate: 3.0e-06
+  monitor: val/loss
+  target: calo_ldm.models.CondGPT
+  params:
+    pure_mode: false
+    R_renorm: true
+    record_freq: 50
+    codebook_size: 1024
+    sequence_shape: 
+    - 17
+    - 4
+    n_layer: 2
+    n_head: 2
+    n_embd: 64
+    predict_R: true
+    R_bits: 10
+    cond_bins: 0
+    vq_config:
+      model_config: config/ds2_step1.yaml
+      checkpoint: models/ds2/checkpoints/epoch.ckpt

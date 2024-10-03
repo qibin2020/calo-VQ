@@ -1,0 +1,132 @@
+data:
+  params:
+    num_workers: 4
+    pin_memory: true
+    train:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+        do_ds1_augmentations: false
+        do_noise_kev: 1.0
+    validation:
+      target: calo_ldm.data.CaloHDF5
+      params:
+        file_path: "xxx.hdf5"
+    batch_size: 512
+  target: calo_ldm.data.DataModuleFromConfig
+model:
+  base_learning_rate: 2.0e-06
+  target: calo_ldm.models.VQModel
+  params:
+    monitor: val/rec_loss
+    embed_dim: 256
+    n_embed: 1024
+    cond_dim: 3
+    z_padding_strategy: null
+    log_scale_params:
+    - 0
+    - 8000
+    - 10
+    reco_normalization: R
+    disc_normalization: U
+    learn_R: false
+    dataset_name: 1_pion
+    encoder_config:
+      target: calo_ldm.models.hybrid1d.Encoder
+      params:
+        pix_in: 533
+        seq_out: 32
+        ch_hidden: 32
+        ch_out: 256
+        dense_channels:
+        - 512
+        - 512
+        conv_channels:
+        - 256
+        - 256
+        - 256
+        cond_bins: 15
+        conv_activation: relu
+        dense_activation: relu
+        output_activation: relu
+        cond_dim: 3
+        log_scale_params:
+        - 0
+        - 8000
+        - 10
+        z_pad: null
+        z_padding_strategy: null
+    decoder_config:
+      target: calo_ldm.models.hybrid1d.DecoderMH
+      params:
+        seq_in: 32
+        pix_out: 533
+        ch_in: 256
+        conv_channels:
+        - 256
+        - 256
+        - 256
+        - 32
+        dense_channels:
+        - 512
+        - 512
+        cond_bins: 15
+        conv_activation: relu
+        dense_activation: relu
+        output_activation: flat_voxel_softmax
+        cond_dim: 3
+        learn_R: false
+        z_pad: null
+        z_padding_strategy: null
+        layer_seg:
+        - 8
+        - 100
+        - 100
+        - 5
+        - 150
+        - 160
+        - 10
+        layer_seg_dim: -1
+    loss_config:
+      target: calo_ldm.losses.CombinedLoss
+      params:
+        pixel_power: 1
+        pixel_weight: 1
+        ec_weight: 0
+        width_weight: 0
+        disc_weight: 0.1
+        disc_start: 50
+        learn_R: false
+        disc_config:
+          target: calo_ldm.models.Dense
+          params:
+            ch_in: 533
+            ch_out: 1
+            cond_bins: 15
+            channels:
+            - 512
+            - 256
+            - 128
+            - 128
+            - 64
+            output_activation: null
+            cond_dim: 3
+            log_scale_params:
+            - 0
+            - 8000
+            - 10
+        cond_dim: 3
+        n_embed: 1024
+        log_scale_params:
+        - 0
+        - 8000
+        - 10
+        disc_normalization: U
+        reco_normalization: R
+        unpad_z: null
+        dataset_name: 1_pion
+    do_metric: true
+    do_more_metric: true
+    do_R_metric: null
+    metric_evts: 100000
+    record_freq: 20
